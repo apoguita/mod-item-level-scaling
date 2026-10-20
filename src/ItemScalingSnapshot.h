@@ -137,7 +137,7 @@ namespace ItemScalingSnapshot
         }
         field("socketBonus", static_cast<int32>(item.socketBonus));
         field("GemProperties", static_cast<int32>(item.GemProperties));
-        field("RequiredDisenchantSkill", item.RequiredDisenchantSkill);
+        field("RequiredDisenchantSkill", static_cast<int32>(item.RequiredDisenchantSkill));
         field("ArmorDamageModifier", item.ArmorDamageModifier);
         field("duration", item.Duration);
         field("ItemLimitCategory", item.ItemLimitCategory);
