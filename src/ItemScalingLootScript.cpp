@@ -3,6 +3,7 @@
  */
 
 #include "ItemScalingLootScript.h"
+#include "Config.h"
 #include "Creature.h"
 #include "DBCStores.h"
 #include "DisableMgr.h"
@@ -652,7 +653,76 @@ void ItemScalingLootScript::PrepareLoot(Loot* loot, LootStore const& store, Play
     }
 }
 
+// Warband: quest rewards follow the same rule the world does. A reward item is handed over at the
+// level the quest presents at for this character - the highest Warband.Quests.ScaleStep multiple
+// the character has reached - and never below the item's own level. The hook fires after the core
+// has granted the original item, so the original stack is removed and the scaled variant takes its
+// place; a variant still being generated leaves the original untouched (retry on the next reward).
+//
+// The reward window still lists the original item: making the offer/choice packets advertise the
+// variant ids is a separate packet change and is not done here.
+class ItemScalingQuestRewardScript final : public PlayerScript
+{
+public:
+    ItemScalingQuestRewardScript() : PlayerScript("ItemScalingQuestRewardScript", { PLAYERHOOK_ON_QUEST_REWARD_ITEM }) { }
+
+    void OnPlayerQuestRewardItem(Player* player, Item* item, uint32 count) override
+    {
+        if (!sItemScalingConfig->Enable || !sItemScalingConfig->QuestRewards || !player || !item || !count)
+            return;
+
+        ItemTemplate const* proto = sObjectMgr->GetItemTemplate(item->GetEntry());
+        if (!proto || !ItemScalingFormula::IsScalableEquipment(proto))
+            return;
+
+        if (proto->StartQuest != 0 || proto->ScriptId != 0)
+            return;
+
+        if (!sItemScalingConfig->IsQualityEnabled(proto->Quality))
+            return;
+
+        if (sItemScalingConfig->IsItemExcluded(proto->ItemId))
+            return;
+
+        // A random-suffix reward would need the suffix rolled before its variant can exist; leave
+        // it at its own level rather than baking a guess.
+        if (proto->RandomSuffix != 0 || proto->RandomProperty != 0)
+            return;
+
+        uint32 const step = sConfigMgr->GetOption<uint32>("Warband.Quests.ScaleStep", 5);
+        if (!step)
+            return;
+
+        uint8 const nativeRef = ItemScalingFormula::GetNativeReferenceLevel(proto);
+        uint32 const reached = (uint32(player->GetLevel()) / step) * step;
+        if (reached <= nativeRef)
+            return;
+
+        uint16 const targetIlvl =
+            sItemScalingBaseline->CalculateTargetItemLevel(proto, uint8(reached), nativeRef);
+        if (!targetIlvl)
+            return;
+
+        uint32 const variant = sItemScalingRegistry->FindOrRequestVariant(
+            proto, uint8(reached), targetIlvl, sItemScalingConfig->FormulaVersion, player->GetLevel());
+        if (!variant || variant == proto->ItemId)
+            return;
+
+        uint32 const original = proto->ItemId;
+        player->DestroyItemCount(original, count, true);
+        player->AddItem(variant, count);
+
+        if (sItemScalingConfig->Debug)
+        {
+            LOG_INFO("module.ItemScaling",
+                "ItemScaling: quest reward item {} '{}' -> Variant {} (Level {} -> {})",
+                original, proto->Name1, variant, nativeRef, reached);
+        }
+    }
+};
+
 void AddItemScalingLootScripts()
 {
     new ItemScalingLootScript();
+    new ItemScalingQuestRewardScript();
 }

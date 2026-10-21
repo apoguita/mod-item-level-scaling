@@ -63,6 +63,7 @@ void ItemScalingConfig::Load(bool reload)
     ScaleRaid25MHeroic = sConfigMgr->GetOption<bool>("ItemScaling.Scale.Raid25MHeroic", true);
     ScaleRaid40M = sConfigMgr->GetOption<bool>("ItemScaling.Scale.Raid40M", true);
     ScaleChests = sConfigMgr->GetOption<bool>("ItemScaling.ScaleChests", true);
+    QuestRewards = sConfigMgr->GetOption<bool>("ItemScaling.QuestRewards", true);
 
     std::string methodStr = sConfigMgr->GetOption<std::string>("ItemScaling.LevelScaling.Method", "dynamic");
     if (methodStr == "fixed")

@@ -183,6 +183,21 @@ ItemScaling.ScaleExistingScalingItems = 0
 ItemScaling.ScaleUniqueItems = 1
 
 #
+#    ItemScaling.QuestRewards
+#        Description: Scale quest reward equipment to the level the quest presents at for the
+#                     character (the highest Warband.Quests.ScaleStep multiple reached, never below
+#                     the item's own level - mirrored from mod_warband.conf). Quest rewards are
+#                     granted as a scaled variant of the original item; items with random
+#                     suffixes/properties, quest starters, scripted items, excluded items and
+#                     excluded qualities are left at their own level. Unavailable variants (still
+#                     being generated) leave the original item in place.
+#        Default:     1 - Enabled
+#                     0 - Disabled (quest rewards keep their original level)
+#
+
+ItemScaling.QuestRewards = 1
+
+#
 #    Rarity / Quality Filters
 #        Description: Controls which item qualities are eligible for scaling.
 #                     ScalePoor      (Gray)

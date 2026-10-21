@@ -34,6 +34,7 @@ public:
     bool ScaleRaid25MHeroic{true};
     bool ScaleRaid40M{true};
     bool ScaleChests{true};
+    bool QuestRewards{true};
     ItemScalingMethod Method{SCALING_METHOD_DYNAMIC};
     uint8 MinLevel{1};
     uint8 MaxLevel{80};
